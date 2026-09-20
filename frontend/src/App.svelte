@@ -233,13 +233,65 @@
     });
 
     onDestroy(() => {
+        cleanupFileDrop?.();
         invalidateLiveApplySession();
         debouncedLiveApply.cancel();
         syncStateToBackend.cancel();
         setLivePending(false);
     });
 
+    // Dropped files arrive from Wails as absolute paths. HandleDroppedFiles
+    // picks the first supported image and rejects everything else.
+    let cleanupFileDrop: (() => void) | null = null;
+
+    async function handleWallpaperDrop(paths: string[]): Promise<void> {
+        try {
+            const {HandleDroppedFiles} = await import('../wailsjs/go/main/App');
+            const path = await HandleDroppedFiles(paths);
+            setActiveTab('editor');
+            setWallpaperPath(path);
+            showToast('Wallpaper changed — click Extract to generate palette');
+        } catch {
+            showToast('Drop an image file to use as wallpaper');
+        }
+    }
+
     onMount(async () => {
+        // Register file drops before showing the window. The runtime installs
+        // preventDefault handlers for file drags, which stops WebKit from
+        // navigating to the dropped file instead of keeping the UI.
+        try {
+            const {OnFileDrop, OnFileDropOff} = await import(
+                '../wailsjs/runtime/runtime'
+            );
+            const guardEvents: string[] = [
+                'drag',
+                'dragenter',
+                'dragstart',
+                'dragend',
+            ];
+            const preventFileNavigation = (event: Event) => {
+                const dragEvent = event as DragEvent;
+                if (dragEvent.dataTransfer?.types.includes('Files')) {
+                    dragEvent.preventDefault();
+                }
+            };
+            for (const name of guardEvents) {
+                window.addEventListener(name, preventFileNavigation);
+            }
+            OnFileDrop((_x, _y, paths) => {
+                void handleWallpaperDrop(paths);
+            }, false);
+            cleanupFileDrop = () => {
+                OnFileDropOff();
+                for (const name of guardEvents) {
+                    window.removeEventListener(name, preventFileNavigation);
+                }
+            };
+        } catch (e) {
+            console.warn('File drop setup failed:', e);
+        }
+
         // Show window now that the DOM is ready (started hidden to avoid white flash)
         try {
             const {WindowShow} = await import('../wailsjs/runtime/runtime');

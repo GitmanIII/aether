@@ -82,9 +82,12 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 30, G: 30, B: 46, A: 1},
 		OnStartup:        app.startup,
+		// EnableFileDrop delivers absolute paths for files dropped on the
+		// window. Do not set DisableWebViewDrop on Linux: Wails needs the
+		// webview's GTK drag destination to receive the paths. The frontend
+		// calls preventDefault so WebKit does not navigate to the file.
 		DragAndDrop: &options.DragAndDrop{
-			EnableFileDrop:     false,
-			DisableWebViewDrop: true,
+			EnableFileDrop: true,
 		},
 		Bind: []interface{}{
 			app,
