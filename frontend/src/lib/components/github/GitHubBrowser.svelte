@@ -68,6 +68,16 @@
     let savedReposRef = $state<HTMLDivElement | null>(null);
 
     let nameFilter = $state('');
+    let scrollEl = $state<HTMLDivElement | null>(null);
+
+    // Start every folder at the top, with no filter from the previous one.
+    // A fast response can replace the list before the browser shrinks the
+    // scroll area, so the old offset stays unless it is reset here.
+    $effect(() => {
+        getURL();
+        nameFilter = '';
+        if (scrollEl) scrollEl.scrollTop = 0;
+    });
 
     let results = $derived(getResults());
     let isLoading = $derived(getIsLoading());
@@ -108,9 +118,9 @@
         if (e.key === 'Enter') handleSubmit();
     }
 
-    function handleNavigate(dirName: string) {
+    function handleNavigate(dir: ImageInfo) {
         closePreview();
-        storeNavigateToDir(dirName);
+        storeNavigateToDir(dir.name, dir.htmlURL);
         urlInput = getURL();
     }
 
@@ -356,7 +366,7 @@
         </div>
     </ViewHeader>
 
-    <div class="flex-1 overflow-y-auto p-4">
+    <div bind:this={scrollEl} class="flex-1 overflow-y-auto p-4">
         {#if isLoading}
             <LoadingState message="Fetching from GitHub…" />
         {:else if error}
@@ -406,7 +416,7 @@
                     {#if item.type === 'dir'}
                         <button
                             class="bg-bg-secondary border-border hover:border-border-focus group flex cursor-pointer flex-col border text-left transition-colors duration-100"
-                            onclick={() => handleNavigate(item.name)}
+                            onclick={() => handleNavigate(item)}
                             type="button"
                             aria-label="Open directory {item.name}"
                         >
