@@ -1,10 +1,10 @@
+
+
 <p align="center">
   <img src="icon.png" alt="Aether Icon" width="256" height="256">
 </p>
 
-
-https://github.com/user-attachments/assets/862377df-ad05-48de-a0a3-65b243c4b44b
-
+https://github.com/user-attachments/assets/58bb3de6-d425-4f8e-a01c-79da7a26a9f0
 
 # Aether
 
