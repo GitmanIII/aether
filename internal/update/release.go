@@ -20,6 +20,7 @@ type Release struct {
 	LatestVersion   string `json:"latestVersion"`
 	ReleaseURL      string `json:"releaseURL"`
 	UpdateAvailable bool   `json:"updateAvailable"`
+	UpdateCommand   string `json:"updateCommand"`
 	assets          []asset
 }
 
@@ -38,6 +39,9 @@ type githubRelease struct {
 // currentVersion. The check intentionally does not cache so the caller can
 // explicitly refresh the status.
 func Check(ctx context.Context, currentVersion string) (Release, error) {
+	if command := UpdateCommand(); command != "" {
+		return Release{CurrentVersion: normalizeVersion(currentVersion), UpdateCommand: command}, nil
+	}
 	client := &http.Client{Timeout: 8 * time.Second}
 	return check(ctx, currentVersion, latestReleaseURL, client)
 }

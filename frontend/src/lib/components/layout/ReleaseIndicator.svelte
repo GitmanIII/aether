@@ -7,9 +7,10 @@
         latestVersion: string;
         releaseURL: string;
         updateAvailable: boolean;
+        updateCommand: string;
     };
 
-    type Status = 'checking' | 'current' | 'available' | 'error';
+    type Status = 'checking' | 'current' | 'available' | 'managed' | 'error';
 
     let {isMac = false}: {isMac?: boolean} = $props();
 
@@ -44,7 +45,11 @@
             release = (await GetReleaseStatus(
                 __APP_VERSION__
             )) as ReleaseStatus;
-            status = release.updateAvailable ? 'available' : 'current';
+            status = release.updateCommand
+                ? 'managed'
+                : release.updateAvailable
+                  ? 'available'
+                  : 'current';
         } catch {
             status = 'error';
         }
@@ -75,38 +80,42 @@
     });
 </script>
 
-<button
-    type="button"
-    class="text-fg-dimmed hover:bg-bg-hover relative flex h-[30px] w-[30px] items-center justify-center transition-colors"
-    class:mb-0.5={isMac}
-    onclick={handleClick}
-    aria-label={title}
-    {title}
->
-    {#if status === 'available'}
-        <span
-            class="bg-warning absolute h-3.5 w-3.5 animate-ping opacity-45"
-            style="border-radius: 9999px !important"
-            aria-hidden="true"
-        ></span>
-    {/if}
-    <span
-        class="{signalClass} relative flex h-2.5 w-2.5 items-center justify-center"
-        style="border-radius: 9999px !important"
-        aria-hidden="true"
+<!-- A package manager owns managed installs, so the indicator has nothing to
+     offer there. -->
+{#if status !== 'managed'}
+    <button
+        type="button"
+        class="text-fg-dimmed hover:bg-bg-hover relative flex h-[30px] w-[30px] items-center justify-center transition-colors"
+        class:mb-0.5={isMac}
+        onclick={handleClick}
+        aria-label={title}
+        {title}
     >
         {#if status === 'available'}
-            <svg
-                class="h-2 w-2 text-[#111116]"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="M12 19V5M6 11l6-6 6 6"></path>
-            </svg>
+            <span
+                class="bg-warning absolute h-3.5 w-3.5 animate-ping opacity-45"
+                style="border-radius: 9999px !important"
+                aria-hidden="true"
+            ></span>
         {/if}
-    </span>
-</button>
+        <span
+            class="{signalClass} relative flex h-2.5 w-2.5 items-center justify-center"
+            style="border-radius: 9999px !important"
+            aria-hidden="true"
+        >
+            {#if status === 'available'}
+                <svg
+                    class="h-2 w-2 text-[#111116]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M12 19V5M6 11l6-6 6 6"></path>
+                </svg>
+            {/if}
+        </span>
+    </button>
+{/if}

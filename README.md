@@ -77,6 +77,16 @@ git clone https://github.com/omacom/aether.git
 cd aether && make build
 ```
 
+### Package-managed installs
+
+When pacman owns the `aether` binary, Aether does not check for releases or upgrade itself. `aether upgrade` prints the update command instead: `omarchy-update`, `yay -Syu`, `paru -Syu` or `sudo pacman -Syu`.
+
+To set this behavior in other packages, give the update command at build time:
+
+```bash
+wails build -tags webkit2_41 -ldflags "-X 'aether/internal/update.packageUpdateCommand=sudo dnf upgrade aether'"
+```
+
 ### Basic Usage
 
 1. Select a wallpaper (drag & drop, file picker, or wallhaven browser)
