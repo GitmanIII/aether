@@ -84,8 +84,11 @@
                     showToast('Already in additional images');
                     return;
                 }
-                addAdditionalImage(path);
-                showToast('Added to additional images');
+                showToast(
+                    addAdditionalImage(path)
+                        ? 'Added to additional images'
+                        : 'Skipped: the theme already has a wallpaper with that filename'
+                );
             } else {
                 setWallpaperPath(path);
                 setActiveTab('editor');

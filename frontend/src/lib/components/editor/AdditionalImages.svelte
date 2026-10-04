@@ -43,8 +43,11 @@
             );
             const path = await OpenFileDialog();
             if (path) {
-                addAdditionalImage(path);
-                showToast('Image added');
+                showToast(
+                    addAdditionalImage(path)
+                        ? 'Image added'
+                        : 'Skipped: the theme already has a wallpaper with that filename'
+                );
             }
         } catch {}
     }
@@ -73,7 +76,9 @@
     </div>
 
     <div class="grid grid-cols-2 gap-2 px-3.5 pb-3.5 pt-3">
-        {#each getAdditionalImages() as img (img)}
+        <!-- Unkeyed on purpose. A keyed each throws on a repeated path,
+             and that error stopped every later effect (issue #130). -->
+        {#each getAdditionalImages() as img}
             <div
                 class="border-border group relative aspect-video overflow-hidden border bg-black"
             >
