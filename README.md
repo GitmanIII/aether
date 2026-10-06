@@ -41,6 +41,12 @@ A visual theming application for [Omarchy](https://omarchy.org). Extract colors 
 - Per-app overrides, reload hooks, and post-apply scripts
 - Add your own apps with custom templates
 
+### Multiple Displays
+- Read the monitor layout from Omarchy/Hyprland, including position, scale, and rotation
+- Assign a separate wallpaper to each display, so a portrait monitor gets a native image instead of a crop
+- Detect portrait outputs automatically and preview the physical layout to scale
+- Generate a theme from any display's wallpaper
+
 ### Extras
 - WCAG contrast ratio checker with AAA/AA accessibility grading
 - Gradient generator and single-color palette builder
@@ -146,6 +152,7 @@ From `frontend/`, run `npm ci`, `npm run check`, `npm test`, and `npm run build`
 | [Wallhaven](docs/wallhaven.md) | Browse online wallpapers |
 | [GitHub Source](docs/github-source.md) | Browse repository wallpapers |
 | [Favorites](docs/favorites.md) | Save wallpapers and export a collection |
+| [Displays](docs/displays.md) | Per-display wallpapers and portrait monitors |
 | [Blueprints](docs/blueprints.md) | Save and restore themes |
 | [Custom Templates](docs/custom-templates.md) | Add support for your apps |
 | [Custom Apps](docs/custom-apps.md) | Per-app template system |

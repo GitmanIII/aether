@@ -46,6 +46,10 @@ export function ChooseWallpaperFolder() {
   return window['go']['main']['App']['ChooseWallpaperFolder']();
 }
 
+export function ClearDisplayWallpaper(arg1) {
+  return window['go']['main']['App']['ClearDisplayWallpaper'](arg1);
+}
+
 export function ClearTheme() {
   return window['go']['main']['App']['ClearTheme']();
 }
@@ -194,6 +198,10 @@ export function ListBlueprints() {
   return window['go']['main']['App']['ListBlueprints']();
 }
 
+export function ListDisplays() {
+  return window['go']['main']['App']['ListDisplays']();
+}
+
 export function ListGitHubImages(arg1) {
   return window['go']['main']['App']['ListGitHubImages'](arg1);
 }
@@ -264,6 +272,10 @@ export function ScanLocalWallpapers() {
 
 export function SearchWallhaven(arg1) {
   return window['go']['main']['App']['SearchWallhaven'](arg1);
+}
+
+export function SetDisplayWallpaper(arg1, arg2) {
+  return window['go']['main']['App']['SetDisplayWallpaper'](arg1, arg2);
 }
 
 export function SetExtractionMode(arg1) {

@@ -511,6 +511,31 @@ func (a *App) ApplyWallpaperOnly(path string) error {
 	return omarchy.SetBackground(path)
 }
 
+// ListDisplays returns the connected displays and whether the active Omarchy
+// shell background service can render a different wallpaper per display.
+func (a *App) ListDisplays() (omarchy.DisplaysResult, error) {
+	return omarchy.Displays()
+}
+
+// SetDisplayWallpaper assigns a wallpaper to one display through the active
+// per-screen background service. It fails when no such service is running.
+func (a *App) SetDisplayWallpaper(screenKey, path string) error {
+	info, err := os.Stat(path)
+	if err != nil || !info.Mode().IsRegular() {
+		return fmt.Errorf("wallpaper must be a readable regular file")
+	}
+	if err := wallpaper.ValidateImageFile(path); err != nil {
+		return err
+	}
+	return omarchy.SetDisplayWallpaper(screenKey, path)
+}
+
+// ClearDisplayWallpaper removes a display's wallpaper so it falls back to the
+// global Omarchy background.
+func (a *App) ClearDisplayWallpaper(screenKey string) error {
+	return omarchy.ClearDisplayWallpaper(screenKey)
+}
+
 // ClearTheme removes the Aether theme and reverts to the default.
 func (a *App) ClearTheme() error {
 	return theme.ClearTheme()

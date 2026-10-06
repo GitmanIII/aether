@@ -676,6 +676,119 @@ export namespace omarchy {
 	        this.overrideApps = source["overrideApps"];
 	    }
 	}
+	export class DisplayAssignment {
+	    type: string;
+	    path?: string;
+	    color?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DisplayAssignment(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.type = source["type"];
+	        this.path = source["path"];
+	        this.color = source["color"];
+	    }
+	}
+	export class Display {
+	    name: string;
+	    description: string;
+	    make: string;
+	    model: string;
+	    serial: string;
+	    x: number;
+	    y: number;
+	    width: number;
+	    height: number;
+	    physicalWidth: number;
+	    physicalHeight: number;
+	    scale: number;
+	    transform: number;
+	    portrait: boolean;
+	    focused: boolean;
+	    key: string;
+	    keys: string[];
+	    assignment?: DisplayAssignment;
+	
+	    static createFrom(source: any = {}) {
+	        return new Display(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.description = source["description"];
+	        this.make = source["make"];
+	        this.model = source["model"];
+	        this.serial = source["serial"];
+	        this.x = source["x"];
+	        this.y = source["y"];
+	        this.width = source["width"];
+	        this.height = source["height"];
+	        this.physicalWidth = source["physicalWidth"];
+	        this.physicalHeight = source["physicalHeight"];
+	        this.scale = source["scale"];
+	        this.transform = source["transform"];
+	        this.portrait = source["portrait"];
+	        this.focused = source["focused"];
+	        this.key = source["key"];
+	        this.keys = source["keys"];
+	        this.assignment = this.convertValues(source["assignment"], DisplayAssignment);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
+	export class DisplaysResult {
+	    perScreen: boolean;
+	    displays: Display[];
+	
+	    static createFrom(source: any = {}) {
+	        return new DisplaysResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.perScreen = source["perScreen"];
+	        this.displays = this.convertValues(source["displays"], Display);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class Theme {
 	    name: string;
 	    path: string;

@@ -33,6 +33,8 @@ export function CancelFavoritesExport():Promise<void>;
 
 export function ChooseWallpaperFolder():Promise<string>;
 
+export function ClearDisplayWallpaper(arg1:string):Promise<void>;
+
 export function ClearTheme():Promise<void>;
 
 export function CloseIPC():Promise<void>;
@@ -107,6 +109,8 @@ export function IsPreviewCached(arg1:string):Promise<boolean>;
 
 export function ListBlueprints():Promise<Array<Record<string, any>>>;
 
+export function ListDisplays():Promise<omarchy.DisplaysResult>;
+
 export function ListGitHubImages(arg1:string):Promise<githubsource.ListContentsResult>;
 
 export function ListInstalledIconThemes():Promise<Array<icontheme.ThemeSummary>>;
@@ -142,6 +146,8 @@ export function SaveWallpaperTags(arg1:Record<string, any>):Promise<void>;
 export function ScanLocalWallpapers():Promise<Array<wallpaper.WallpaperInfo>>;
 
 export function SearchWallhaven(arg1:wallhaven.SearchParams):Promise<wallhaven.SearchResult>;
+
+export function SetDisplayWallpaper(arg1:string,arg2:string):Promise<void>;
 
 export function SetExtractionMode(arg1:string):Promise<void>;
 

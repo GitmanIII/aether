@@ -10,6 +10,7 @@
     import LocalBrowser from '$lib/components/local/LocalBrowser.svelte';
     import FavoritesView from '$lib/components/favorites/FavoritesView.svelte';
     import BlueprintsView from '$lib/components/blueprints/BlueprintsView.svelte';
+    import DisplaysView from '$lib/components/displays/DisplaysView.svelte';
     import OmarchyThemes from '$lib/components/blueprints/OmarchyThemes.svelte';
     import SettingsView from '$lib/components/settings/SettingsView.svelte';
     import AboutView from '$lib/components/layout/AboutView.svelte';
@@ -51,6 +52,7 @@
         'local',
         'favorites',
         'blueprints',
+        'displays',
         'system',
         'settings',
         'about',
@@ -583,6 +585,8 @@
                     <FavoritesView />
                 {:else if activeTab === 'blueprints'}
                     <BlueprintsView />
+                {:else if activeTab === 'displays'}
+                    <DisplaysView />
                 {:else if activeTab === 'system'}
                     <OmarchyThemes />
                 {:else if activeTab === 'settings'}
