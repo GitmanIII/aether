@@ -33,7 +33,7 @@ export function CancelFavoritesExport():Promise<void>;
 
 export function ChooseWallpaperFolder():Promise<string>;
 
-export function ClearDisplayWallpaper(arg1:string):Promise<void>;
+export function ClearDisplayWallpaper(arg1:Array<string>):Promise<void>;
 
 export function ClearTheme():Promise<void>;
 
@@ -147,7 +147,7 @@ export function ScanLocalWallpapers():Promise<Array<wallpaper.WallpaperInfo>>;
 
 export function SearchWallhaven(arg1:wallhaven.SearchParams):Promise<wallhaven.SearchResult>;
 
-export function SetDisplayWallpaper(arg1:string,arg2:string):Promise<void>;
+export function SetDisplayWallpaper(arg1:Array<string>,arg2:string):Promise<void>;
 
 export function SetExtractionMode(arg1:string):Promise<void>;
 

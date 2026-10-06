@@ -142,10 +142,13 @@ func displayKeys(monitor platform.Monitor) []string {
 	return keys
 }
 
-// SetDisplayWallpaper assigns an image to a single display through the active
-// per-screen background service.
-func SetDisplayWallpaper(screenKey, path string) error {
-	if strings.TrimSpace(screenKey) == "" {
+// SetDisplayWallpaper assigns an image to a display through the active
+// per-screen background service. Every candidate key for the display is set,
+// because a service may resolve a display by its connector name rather than
+// the serial-backed key.
+func SetDisplayWallpaper(screenKeys []string, path string) error {
+	keys := normalizeKeys(screenKeys)
+	if len(keys) == 0 {
 		return fmt.Errorf("a display key is required")
 	}
 	abs, err := filepath.Abs(path)
@@ -162,29 +165,54 @@ func SetDisplayWallpaper(screenKey, path string) error {
 	if !PerScreenSupported() {
 		return ErrPerScreenUnsupported
 	}
-	out, err := platform.RunSync("omarchy-shell", "background", "setForScreen", screenKey, abs)
-	if err != nil {
-		return fmt.Errorf("set display background: %w", err)
-	}
-	if strings.TrimSpace(out) == "invalid" {
-		return fmt.Errorf("the background service rejected display %q", screenKey)
+	for _, key := range keys {
+		out, err := platform.RunSync("omarchy-shell", "background", "setForScreen", key, abs)
+		if err != nil {
+			return fmt.Errorf("set display background: %w", err)
+		}
+		if strings.TrimSpace(out) == "invalid" {
+			return fmt.Errorf("the background service rejected display %q", key)
+		}
 	}
 	return nil
 }
 
 // ClearDisplayWallpaper removes a display's assignment so it falls back to the
-// global Omarchy background.
-func ClearDisplayWallpaper(screenKey string) error {
-	if strings.TrimSpace(screenKey) == "" {
+// global Omarchy background. Every candidate key is cleared so a stale
+// connector entry cannot resurface after the serial key is removed.
+func ClearDisplayWallpaper(screenKeys []string) error {
+	keys := normalizeKeys(screenKeys)
+	if len(keys) == 0 {
 		return fmt.Errorf("a display key is required")
 	}
 	if !PerScreenSupported() {
 		return ErrPerScreenUnsupported
 	}
-	if _, err := platform.RunSync("omarchy-shell", "background", "clearForScreen", screenKey); err != nil {
-		return fmt.Errorf("clear display background: %w", err)
+	for _, key := range keys {
+		if _, err := platform.RunSync("omarchy-shell", "background", "clearForScreen", key); err != nil {
+			return fmt.Errorf("clear display background: %w", err)
+		}
 	}
 	return nil
+}
+
+// normalizeKeys trims, drops empty and de-duplicates assignment keys while
+// preserving their order.
+func normalizeKeys(keys []string) []string {
+	normalized := make([]string, 0, len(keys))
+	seen := make(map[string]struct{}, len(keys))
+	for _, key := range keys {
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		normalized = append(normalized, key)
+	}
+	return normalized
 }
 
 // PerScreenSupported reports whether the active background service implements

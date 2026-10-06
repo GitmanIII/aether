@@ -64,7 +64,7 @@ test('assignDisplayWallpaper sends the stable key and reloads', async () => {
         '/tmp/portrait.jpg'
     );
     expect(SetDisplayWallpaper).toHaveBeenCalledWith(
-        'LG Electronics:LG ULTRAGEAR:010NTQDHH228',
+        ['LG Electronics:LG ULTRAGEAR:010NTQDHH228', 'DP-4'],
         '/tmp/portrait.jpg'
     );
     expect(ListDisplays).toHaveBeenCalledTimes(2);
@@ -73,9 +73,10 @@ test('assignDisplayWallpaper sends the stable key and reloads', async () => {
 test('clearDisplayWallpaper clears by key', async () => {
     await displays.loadDisplays(true);
     await displays.clearDisplayWallpaper(displays.getDisplays()[0]);
-    expect(ClearDisplayWallpaper).toHaveBeenCalledWith(
-        'LG Electronics:LG ULTRAGEAR:010NTQDHH228'
-    );
+    expect(ClearDisplayWallpaper).toHaveBeenCalledWith([
+        'LG Electronics:LG ULTRAGEAR:010NTQDHH228',
+        'DP-4',
+    ]);
 });
 
 test('the view labels portrait displays and marks the focused one', async () => {

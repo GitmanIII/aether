@@ -56,7 +56,7 @@ export async function assignDisplayWallpaper(
         const {SetDisplayWallpaper} = await import(
             '../../../wailsjs/go/main/App'
         );
-        await SetDisplayWallpaper(display.key, path);
+        await SetDisplayWallpaper(display.keys, path);
         showToast(`Wallpaper set for ${display.name}`);
         await loadDisplays(true);
     } catch (err) {
@@ -75,7 +75,7 @@ export async function clearDisplayWallpaper(
         const {ClearDisplayWallpaper} = await import(
             '../../../wailsjs/go/main/App'
         );
-        await ClearDisplayWallpaper(display.key);
+        await ClearDisplayWallpaper(display.keys);
         showToast(`${display.name} now uses the global background`);
         await loadDisplays(true);
     } catch (err) {

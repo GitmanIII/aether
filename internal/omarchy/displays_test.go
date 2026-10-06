@@ -112,3 +112,11 @@ func TestNewDisplayFallsBackToConnectorAssignment(t *testing.T) {
 		t.Fatalf("expected the connector assignment, got %+v", display.Assignment)
 	}
 }
+
+func TestNormalizeKeys(t *testing.T) {
+	got := normalizeKeys([]string{" a ", "", "b", "a", "  ", "b"})
+	want := []string{"a", "b"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("normalizeKeys = %v, want %v", got, want)
+	}
+}
