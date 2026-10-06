@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,6 +40,25 @@ func (b *trackedBody) Read(p []byte) (int, error) {
 }
 
 func (b *trackedBody) Close() error { b.closed = true; return nil }
+
+func TestSearchAspectFilters(t *testing.T) {
+	c := NewClient()
+	var rawQuery string
+	c.http.Transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		rawQuery = r.URL.RawQuery
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`{"data":[],"meta":{"total":0}}`))}, nil
+	})
+	if _, err := c.Search(SearchParams{Ratios: "16x9,9x16", Resolutions: "1440x2560"}); err != nil {
+		t.Fatal(err)
+	}
+	params, err := url.ParseQuery(rawQuery)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if params.Get("ratios") != "16x9,9x16" || params.Get("resolutions") != "1440x2560" {
+		t.Fatalf("aspect filters missing from %q", rawQuery)
+	}
+}
 
 func TestRejectUnsafeURLsBeforeCache(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())

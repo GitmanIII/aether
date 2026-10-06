@@ -13,6 +13,8 @@ let sorting = $state('date_added');
 let order = $state('desc');
 let page = $state(1);
 let atleast = $state('1920x1080');
+let ratio = $state('');
+let exactResolution = $state('');
 let colorFilter = $state('');
 let apiKey = $state('');
 
@@ -44,6 +46,9 @@ async function loadConfigFromFile() {
             if (config.purity) purity = config.purity;
             if (config.sorting) sorting = config.sorting;
             if (config.resolutions) atleast = config.resolutions;
+            if (config.ratios) ratio = config.ratios;
+            if (config.exactResolution)
+                exactResolution = config.exactResolution;
             if (config.order) order = config.order;
         }
     } catch {}
@@ -60,6 +65,8 @@ function persist() {
                 sorting,
                 order,
                 resolutions: atleast,
+                ratios: ratio,
+                exactResolution,
                 purityControlsEnabled: true,
             });
         })
@@ -84,6 +91,12 @@ export function getOrder(): string {
 }
 export function getAtleast(): string {
     return atleast;
+}
+export function getRatio(): string {
+    return ratio;
+}
+export function getExactResolution(): string {
+    return exactResolution;
 }
 export function getColorFilter(): string {
     return colorFilter;
@@ -126,6 +139,16 @@ export function setAtleast(a: string): void {
     atleast = a;
     persist();
 }
+export function setRatio(r: string): void {
+    ratio = r;
+    // The exact resolution only makes sense for the chosen ratio.
+    exactResolution = '';
+    persist();
+}
+export function setExactResolution(res: string): void {
+    exactResolution = res;
+    persist();
+}
 export function setColorFilter(c: string): void {
     colorFilter = c;
 }
@@ -159,6 +182,22 @@ export function togglePurity(index: number): void {
 }
 
 // --- Actions ---
+/** Builds the wallhaven request params from the current filter state. */
+export function buildSearchParams(page = 1): wallhaven.SearchParams {
+    return {
+        q: query,
+        categories,
+        purity,
+        sorting,
+        order,
+        page,
+        atleast,
+        ratios: ratio,
+        resolutions: exactResolution,
+        colors: colorFilter,
+    };
+}
+
 export async function initializeSearch(): Promise<void> {
     await configReady;
     if (!hasSearched) await search();
@@ -193,16 +232,7 @@ async function doSearch(append: boolean): Promise<void> {
         const params =
             append && lastSearchParams
                 ? {...lastSearchParams, page: page + 1}
-                : {
-                      q: query,
-                      categories,
-                      purity,
-                      sorting,
-                      order,
-                      page: 1,
-                      atleast,
-                      colors: colorFilter,
-                  };
+                : buildSearchParams(1);
         const {SearchWallhaven} = await import('../../../wailsjs/go/main/App');
         if (request !== searchRequest) return;
         const result = await SearchWallhaven(params);

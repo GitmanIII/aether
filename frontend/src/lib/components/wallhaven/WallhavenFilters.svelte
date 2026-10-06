@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {onMount} from 'svelte';
     import {
         getQuery,
         setQuery,
@@ -12,6 +13,10 @@
         setOrder,
         getAtleast,
         setAtleast,
+        getRatio,
+        setRatio,
+        getExactResolution,
+        setExactResolution,
         getColorFilter,
         setColorFilter,
         getApiKey,
@@ -19,9 +24,36 @@
         getTotalResults,
         search,
     } from '$lib/stores/wallhaven.svelte';
+    import {getDisplays, loadDisplays} from '$lib/stores/displays.svelte';
+    import {
+        WALLHAVEN_RATIOS,
+        resolutionsForRatio,
+        nearestWallhavenRatio,
+        resolutionQuery,
+    } from '$lib/utils/aspect';
     import SearchIcon from '$lib/components/shared/SearchIcon.svelte';
 
     let showAdvanced = $state(false);
+    let selectedDisplay = $state('');
+    let displays = $derived(getDisplays());
+
+    onMount(() => {
+        loadDisplays();
+    });
+
+    function handleDisplay(e: Event) {
+        const key = (e.currentTarget as HTMLSelectElement).value;
+        selectedDisplay = key;
+        if (!key) return;
+        const display = getDisplays().find(d => d.key === key);
+        if (!display) return;
+        setRatio(
+            nearestWallhavenRatio(display.physicalWidth, display.physicalHeight)
+        );
+        setExactResolution(
+            resolutionQuery(display.physicalWidth, display.physicalHeight)
+        );
+    }
 
     function handleSubmit(e: Event) {
         e.preventDefault();
@@ -155,6 +187,60 @@
         </div>
 
         <span class="bg-border h-4 w-px"></span>
+
+        {#if displays.length}
+            <div class="relative">
+                <select
+                    class="!border-border text-fg-secondary hover:!border-border-focus focus:!border-accent h-6 border !bg-transparent pl-2 pr-7 text-[11.5px] outline-none transition-colors"
+                    value={selectedDisplay}
+                    onchange={handleDisplay}
+                    title="Match a connected display's aspect and resolution"
+                    aria-label="Match a connected display"
+                >
+                    <option value="">Match display…</option>
+                    {#each displays as display (display.key)}
+                        <option value={display.key}>
+                            {display.name} · {display.physicalWidth}×{display.physicalHeight}
+                        </option>
+                    {/each}
+                </select>
+                {@render chevron('right-2 h-[11px] w-[11px]')}
+            </div>
+        {/if}
+
+        <div class="relative">
+            <select
+                class="!border-border text-fg-secondary hover:!border-border-focus focus:!border-accent h-6 border !bg-transparent pl-2 pr-7 text-[11.5px] outline-none transition-colors"
+                value={getRatio()}
+                onchange={e => setRatio(e.currentTarget.value)}
+                title="Aspect ratio"
+                aria-label="Aspect ratio"
+            >
+                <option value="">Any aspect</option>
+                {#each WALLHAVEN_RATIOS as r}
+                    <option value={r.id}>{r.label}</option>
+                {/each}
+            </select>
+            {@render chevron('right-2 h-[11px] w-[11px]')}
+        </div>
+
+        {#if getRatio()}
+            <div class="relative">
+                <select
+                    class="!border-border text-fg-secondary hover:!border-border-focus focus:!border-accent h-6 border !bg-transparent pl-2 pr-7 text-[11.5px] outline-none transition-colors"
+                    value={getExactResolution()}
+                    onchange={e => setExactResolution(e.currentTarget.value)}
+                    title="Exact resolution"
+                    aria-label="Exact resolution"
+                >
+                    <option value="">Any resolution</option>
+                    {#each resolutionsForRatio(getRatio(), getExactResolution()) as res}
+                        <option value={res}>{res}</option>
+                    {/each}
+                </select>
+                {@render chevron('right-2 h-[11px] w-[11px]')}
+            </div>
+        {/if}
 
         <div class="relative">
             <select
