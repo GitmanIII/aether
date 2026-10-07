@@ -148,6 +148,13 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.themeWatcher.Start(ctx)
 
+	// Refresh the display list when a monitor is plugged or unplugged.
+	platform.WatchMonitorEvents(ctx, func() {
+		if a.ctx != nil {
+			wailsrt.EventsEmit(a.ctx, "displays-changed")
+		}
+	})
+
 	// Start IPC server for remote control
 	srv, err := ipc.NewServer(ipc.DefaultSocketPath(), a)
 	if err != nil {

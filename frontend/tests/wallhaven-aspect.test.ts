@@ -49,3 +49,10 @@ test('changing the ratio clears the exact resolution', () => {
     expect(wallhaven.buildSearchParams().ratios).toBe('16x9');
     expect(wallhaven.buildSearchParams().resolutions).toBe('');
 });
+
+test('assign target round-trips', () => {
+    wallhaven.setAssignTarget('DP-4');
+    expect(wallhaven.getAssignTarget()).toBe('DP-4');
+    wallhaven.setAssignTarget('');
+    expect(wallhaven.getAssignTarget()).toBe('');
+});

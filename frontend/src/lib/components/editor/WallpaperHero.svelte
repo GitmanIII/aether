@@ -29,6 +29,13 @@
         isPending,
     } from '$lib/stores/imagecache.svelte';
     import ImagePreview from '$lib/components/shared/ImagePreview.svelte';
+    import {
+        getActiveDisplayKey,
+        getDisplays,
+        assignDisplayWallpaper,
+        markSessionSet,
+        monitorLabel,
+    } from '$lib/stores/displays.svelte';
 
     let {onedit, expanded = false}: {onedit?: () => void; expanded?: boolean} =
         $props();
@@ -239,10 +246,6 @@
         }
     }
 
-    function handleExtractColors() {
-        void extractColors();
-    }
-
     function handleExtractAll() {
         void extractColors({
             allImages: true,
@@ -255,8 +258,18 @@
                 '../../../../wailsjs/go/main/App'
             );
             const path = await OpenFileDialog();
-            if (path) {
-                setWallpaperPath(path);
+            if (!path) return;
+            setWallpaperPath(path);
+            // Keep the elected monitor's assignment in sync with the hero.
+            const key = getActiveDisplayKey();
+            const display = key
+                ? (getDisplays().find(d => d.key === key) ?? null)
+                : null;
+            if (display) {
+                await assignDisplayWallpaper(display, path, true);
+                markSessionSet(display.key);
+                showToast(`${monitorLabel(display)} wallpaper changed`);
+            } else {
                 showToast(
                     'Wallpaper changed — click Extract to generate palette'
                 );
@@ -459,14 +472,6 @@
                         <span class="text-white/55">· {1 + extraCount}</span>
                     </button>
                 {/if}
-                <button
-                    class="bg-accent hover:bg-accent-hover text-accent-fg h-8 shrink-0 whitespace-nowrap px-4 text-[12px] font-semibold transition-colors disabled:opacity-50"
-                    onclick={handleExtractColors}
-                    disabled={extracting}
-                    title="Extract a 16-color palette from this wallpaper"
-                >
-                    Extract
-                </button>
             </div>
         </div>
     {/if}

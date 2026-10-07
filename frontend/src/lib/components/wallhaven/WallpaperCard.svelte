@@ -6,15 +6,41 @@
     } from '$lib/stores/theme.svelte';
     import {setActiveTab, showToast} from '$lib/stores/ui.svelte';
     import {applyWallpaperOnly} from '$lib/actions/themeActions';
-    import {getIsApplying} from '$lib/stores/theme.svelte';
+    import {
+        setAssignTarget,
+        setRatio,
+        setExactResolution,
+    } from '$lib/stores/wallhaven.svelte';
+    import {
+        assignDisplayWallpaper,
+        monitorLabel,
+        nextUnassignedDisplay,
+        markSessionSet,
+        setActiveDisplayKey,
+    } from '$lib/stores/displays.svelte';
+    import {nearestWallhavenRatio, resolutionQuery} from '$lib/utils/aspect';
     import {openURL} from '$lib/utils/browser';
     import {observeIntersection} from '$lib/utils/intersection';
     import {isFavorite, toggleFavorite} from '$lib/stores/favorites.svelte';
     import {formatFileSize} from '$lib/utils/format';
     import WallpaperTile from '$lib/components/shared/WallpaperTile.svelte';
+    import type {omarchy} from '../../../../wailsjs/go/models';
 
-    let {wallpaper, onpreview}: {wallpaper: any; onpreview: () => void} =
-        $props();
+    let {
+        wallpaper,
+        onpreview,
+        target = null,
+        elected = null,
+        applying = false,
+    }: {
+        wallpaper: any;
+        onpreview: () => void;
+        target?: omarchy.Display | null;
+        elected?: omarchy.Display | null;
+        applying?: boolean;
+    } = $props();
+    // Explicit target wins; otherwise fall back to the editor's elected monitor.
+    let assignTarget = $derived(target ?? elected);
     let isDownloading = $state(false);
     let favoriteKey = $derived(wallpaper.path || wallpaper.id);
     let isFavorited = $derived(isFavorite(favoriteKey));
@@ -41,13 +67,66 @@
                 '../../../../wailsjs/go/main/App'
             );
             const localPath = await DownloadWallpaper(wallpaper.path);
-            setWallpaperPath(localPath);
-            setActiveTab('editor');
-            showToast('Wallpaper selected — click Extract to generate palette');
+            if (assignTarget) {
+                // Assign to the chosen display and stay in the browser, then
+                // nudge the user to the next display that still needs one.
+                setWallpaperPath(localPath);
+                setActiveDisplayKey(assignTarget.key);
+                await assignDisplayWallpaper(assignTarget, localPath, true);
+                markSessionSet(assignTarget.key);
+                const next = nextUnassignedDisplay();
+                if (next) {
+                    setAssignTarget(next.key);
+                    setRatio(
+                        nearestWallhavenRatio(
+                            next.physicalWidth,
+                            next.physicalHeight
+                        )
+                    );
+                    setExactResolution(
+                        resolutionQuery(next.physicalWidth, next.physicalHeight)
+                    );
+                    showToast(
+                        `${monitorLabel(assignTarget)} set — now choose for ${monitorLabel(next)}`
+                    );
+                } else {
+                    showToast(
+                        `${monitorLabel(assignTarget)} set — all displays set`
+                    );
+                }
+            } else {
+                setWallpaperPath(localPath);
+                setActiveTab('editor');
+                showToast(
+                    'Wallpaper selected — click Extract to generate palette'
+                );
+            }
         } catch (e: any) {
             showToast('Failed to download wallpaper');
         } finally {
             isDownloading = false;
+        }
+    }
+
+    async function handleWallpaperOnly() {
+        if (!assignTarget) {
+            await applyWallpaperOnly(wallpaper.path);
+            return;
+        }
+        try {
+            const {DownloadWallpaper} = await import(
+                '../../../../wailsjs/go/main/App'
+            );
+            const localPath = await DownloadWallpaper(wallpaper.path);
+            setWallpaperPath(localPath);
+            setActiveDisplayKey(assignTarget.key);
+            await assignDisplayWallpaper(assignTarget, localPath, true);
+            markSessionSet(assignTarget.key);
+            showToast(
+                `${monitorLabel(assignTarget)} wallpaper updated — palette unchanged`
+            );
+        } catch {
+            showToast('Failed to apply wallpaper');
         }
     }
 
@@ -96,12 +175,18 @@
         name={wallpaper.id}
         {isFavorited}
         busy={isDownloading}
-        applying={getIsApplying()}
-        useLabel={isDownloading ? 'Loading…' : 'Use'}
-        useTitle="Download, set as wallpaper, and open in editor"
+        {applying}
+        useLabel={isDownloading
+            ? 'Loading…'
+            : assignTarget
+              ? `Set for ${monitorLabel(assignTarget)}`
+              : 'Use'}
+        useTitle={assignTarget
+            ? `Download and set as ${monitorLabel(assignTarget)}'s wallpaper`
+            : 'Download, set as wallpaper, and open in editor'}
         visitTitle="Open on wallhaven.cc"
         onuse={handleUse}
-        onwallpaperonly={() => applyWallpaperOnly(wallpaper.path)}
+        onwallpaperonly={handleWallpaperOnly}
         {onpreview}
         onaddextra={handleAddExtra}
         onfavorite={handleFavorite}

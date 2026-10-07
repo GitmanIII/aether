@@ -9,8 +9,10 @@ import (
 
 // ExtractColorsFromImages blends multiple images into a single 16-color palette
 // by sampling pixels from each image and concatenating them before quantization.
-// Non-image inputs and unreadable files are skipped; the second return value is
-// the count of skipped paths, intended for UI feedback.
+// Every image is weighted equally regardless of resolution: each contributes the
+// same number of samples, so a 4K wallpaper cannot dominate a 1080p one. Non-image
+// inputs and unreadable files are skipped; the second return value is the count of
+// skipped paths, intended for UI feedback.
 func ExtractColorsFromImages(imagePaths []string, lightMode bool, mode string) ([16]string, int, error) {
 	if err := validateMode(mode); err != nil {
 		return [16]string{}, 0, err
@@ -26,7 +28,7 @@ func ExtractColorsFromImages(imagePaths []string, lightMode bool, mode string) (
 		}
 	}
 
-	var allPixels []color.RGB
+	samples := make([][]color.RGB, 0, len(imagePaths))
 	skipped := 0
 	for _, p := range imagePaths {
 		if p == "" || !theme.IsImageFile(p) {
@@ -34,12 +36,17 @@ func ExtractColorsFromImages(imagePaths []string, lightMode bool, mode string) (
 			continue
 		}
 		px, err := LoadAndSamplePixels(p)
-		if err != nil {
+		if err != nil || len(px) == 0 {
 			skipped++
 			continue
 		}
-		allPixels = append(allPixels, px...)
+		samples = append(samples, px)
 	}
+	if len(samples) == 0 {
+		return [16]string{}, skipped, fmt.Errorf("no readable images provided")
+	}
+
+	allPixels := equalWeightPixels(samples)
 
 	dominantColors, counts, err := ExtractDominantColorsFromPixels(allPixels, DominantColorsToExtract)
 	if err != nil {
@@ -56,4 +63,24 @@ func ExtractColorsFromImages(imagePaths []string, lightMode bool, mode string) (
 		SavePaletteToCache(cacheKey, palette)
 	}
 	return palette, skipped, nil
+}
+
+// equalWeightPixels concatenates per-image samples after truncating each to the
+// smallest sample count, so every image contributes the same number of pixels
+// (1/N) to a blended palette regardless of its resolution.
+func equalWeightPixels(samples [][]color.RGB) []color.RGB {
+	if len(samples) == 0 {
+		return nil
+	}
+	limit := len(samples[0])
+	for _, px := range samples[1:] {
+		if len(px) < limit {
+			limit = len(px)
+		}
+	}
+	blended := make([]color.RGB, 0, limit*len(samples))
+	for _, px := range samples {
+		blended = append(blended, px[:limit]...)
+	}
+	return blended
 }

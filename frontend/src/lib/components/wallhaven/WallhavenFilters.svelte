@@ -17,6 +17,8 @@
         setRatio,
         getExactResolution,
         setExactResolution,
+        getAssignTarget,
+        setAssignTarget,
         getColorFilter,
         setColorFilter,
         getApiKey,
@@ -24,7 +26,12 @@
         getTotalResults,
         search,
     } from '$lib/stores/wallhaven.svelte';
-    import {getDisplays, loadDisplays} from '$lib/stores/displays.svelte';
+    import {
+        getDisplays,
+        loadDisplays,
+        monitorLabel,
+        getSessionSet,
+    } from '$lib/stores/displays.svelte';
     import {
         WALLHAVEN_RATIOS,
         resolutionsForRatio,
@@ -34,16 +41,24 @@
     import SearchIcon from '$lib/components/shared/SearchIcon.svelte';
 
     let showAdvanced = $state(false);
-    let selectedDisplay = $state('');
     let displays = $derived(getDisplays());
+    let assignTarget = $derived(getAssignTarget());
+    let sessionSet = $derived(getSessionSet());
+    let assignedCount = $derived(
+        displays.filter(d => sessionSet.includes(d.key)).length
+    );
 
     onMount(() => {
-        loadDisplays();
+        loadDisplays(true);
     });
+
+    function isAssigned(display: (typeof displays)[number]): boolean {
+        return sessionSet.includes(display.key);
+    }
 
     function handleDisplay(e: Event) {
         const key = (e.currentTarget as HTMLSelectElement).value;
-        selectedDisplay = key;
+        setAssignTarget(key);
         if (!key) return;
         const display = getDisplays().find(d => d.key === key);
         if (!display) return;
@@ -192,20 +207,32 @@
             <div class="relative">
                 <select
                     class="!border-border text-fg-secondary hover:!border-border-focus focus:!border-accent h-6 border !bg-transparent pl-2 pr-7 text-[11.5px] outline-none transition-colors"
-                    value={selectedDisplay}
+                    value={assignTarget}
                     onchange={handleDisplay}
-                    title="Match a connected display's aspect and resolution"
-                    aria-label="Match a connected display"
+                    title="Pick a display to filter by its aspect and assign wallpapers to it"
+                    aria-label="Choose wallpapers for a display"
                 >
-                    <option value="">Match display…</option>
+                    <option value="">Choose for display…</option>
                     {#each displays as display (display.key)}
-                        <option value={display.key}>
-                            {display.name} · {display.physicalWidth}×{display.physicalHeight}
+                        <option
+                            value={display.key}
+                            style={isAssigned(display)
+                                ? 'color: var(--color-accent)'
+                                : ''}
+                        >
+                            {isAssigned(display) ? '✓ ' : ''}{monitorLabel(
+                                display
+                            )} · {display.physicalWidth}×{display.physicalHeight}
                         </option>
                     {/each}
                 </select>
                 {@render chevron('right-2 h-[11px] w-[11px]')}
             </div>
+            <span
+                class="text-fg-dimmed text-[11px] tabular-nums"
+                title="Displays with an assigned wallpaper"
+                >{assignedCount}/{displays.length} set</span
+            >
         {/if}
 
         <div class="relative">

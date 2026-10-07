@@ -84,13 +84,6 @@ export function buildCommands(): Command[] {
             run: () => setActiveTab('blueprints'),
         },
         {
-            id: 'nav.displays',
-            label: 'Go to Displays',
-            category: 'Navigate',
-            keywords: 'monitors screens portrait wallpaper',
-            run: () => setActiveTab('displays'),
-        },
-        {
             id: 'nav.system',
             label: 'Go to Omarchy',
             category: 'Navigate',

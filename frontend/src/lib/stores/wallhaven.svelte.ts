@@ -15,6 +15,7 @@ let page = $state(1);
 let atleast = $state('1920x1080');
 let ratio = $state('');
 let exactResolution = $state('');
+let assignTarget = $state('');
 let colorFilter = $state('');
 let apiKey = $state('');
 
@@ -97,6 +98,12 @@ export function getRatio(): string {
 }
 export function getExactResolution(): string {
     return exactResolution;
+}
+export function getAssignTarget(): string {
+    return assignTarget;
+}
+export function setAssignTarget(key: string): void {
+    assignTarget = key;
 }
 export function getColorFilter(): string {
     return colorFilter;

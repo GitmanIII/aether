@@ -10,12 +10,12 @@
     import LocalBrowser from '$lib/components/local/LocalBrowser.svelte';
     import FavoritesView from '$lib/components/favorites/FavoritesView.svelte';
     import BlueprintsView from '$lib/components/blueprints/BlueprintsView.svelte';
-    import DisplaysView from '$lib/components/displays/DisplaysView.svelte';
     import OmarchyThemes from '$lib/components/blueprints/OmarchyThemes.svelte';
     import SettingsView from '$lib/components/settings/SettingsView.svelte';
     import AboutView from '$lib/components/layout/AboutView.svelte';
     import ExportProgress from '$lib/components/favorites/ExportProgress.svelte';
     import {initExportEvents} from '$lib/stores/favoritesExport.svelte';
+    import {loadDisplays} from '$lib/stores/displays.svelte';
     import {
         getActiveTab,
         setActiveTab,
@@ -52,7 +52,6 @@
         'local',
         'favorites',
         'blueprints',
-        'displays',
         'system',
         'settings',
         'about',
@@ -563,6 +562,11 @@
                 EventsOn('ipc-state-changed', (state: BackendStatePayload) => {
                     applyBackendState(state);
                 });
+
+                // Hyprland monitor hotplug: refresh the display list.
+                EventsOn('displays-changed', () => {
+                    void loadDisplays(true);
+                });
             } catch {}
         })();
     });
@@ -585,8 +589,6 @@
                     <FavoritesView />
                 {:else if activeTab === 'blueprints'}
                     <BlueprintsView />
-                {:else if activeTab === 'displays'}
-                    <DisplaysView />
                 {:else if activeTab === 'system'}
                     <OmarchyThemes />
                 {:else if activeTab === 'settings'}

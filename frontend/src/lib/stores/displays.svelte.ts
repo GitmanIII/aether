@@ -7,6 +7,11 @@ let perScreen = $state<boolean>(false);
 let loading = $state<boolean>(false);
 let loaded = $state<boolean>(false);
 let error = $state<string>('');
+// Display keys the user has assigned during this run. Resets on launch so the
+// picker shows "set" only for wallpapers chosen in the current session.
+let sessionSet = $state<string[]>([]);
+// The display whose wallpaper the editor currently shows/edits.
+let activeKey = $state<string>('');
 
 // --- Getters ---
 export function getDisplays(): omarchy.Display[] {
@@ -23,6 +28,51 @@ export function getDisplaysLoaded(): boolean {
 }
 export function getDisplaysError(): string {
     return error;
+}
+
+/** Displays that currently have an image assigned. */
+export function getAssignedDisplays(): omarchy.Display[] {
+    return displays.filter(
+        display =>
+            display.assignment?.type === 'image' && !!display.assignment.path
+    );
+}
+
+/** Display keys assigned during this run. */
+export function getSessionSet(): string[] {
+    return sessionSet;
+}
+
+/** Records that a display was assigned in this run. */
+export function markSessionSet(key: string): void {
+    if (key && !sessionSet.includes(key)) {
+        sessionSet = [...sessionSet, key];
+    }
+}
+
+/** The display whose wallpaper the editor is showing. */
+export function getActiveDisplayKey(): string {
+    return activeKey;
+}
+export function setActiveDisplayKey(key: string): void {
+    activeKey = key;
+}
+
+/** 1-based position of a display in the layout, or 0 when unknown. */
+export function monitorNumber(display: omarchy.Display): number {
+    const index = displays.findIndex(d => d.key === display.key);
+    return index >= 0 ? index + 1 : 0;
+}
+
+/** "Monitor 1", falling back to the connector name when the order is unknown. */
+export function monitorLabel(display: omarchy.Display): string {
+    const number = monitorNumber(display);
+    return number > 0 ? `Monitor ${number}` : display.name;
+}
+
+/** First display not yet assigned in this run, in layout order. */
+export function nextUnassignedDisplay(): omarchy.Display | null {
+    return displays.find(d => !sessionSet.includes(d.key)) ?? null;
 }
 
 // --- Actions ---
@@ -50,14 +100,15 @@ export async function loadDisplays(force = false): Promise<void> {
 /** Assigns an image to one display and refreshes the cached state. */
 export async function assignDisplayWallpaper(
     display: omarchy.Display,
-    path: string
+    path: string,
+    silent = false
 ): Promise<void> {
     try {
         const {SetDisplayWallpaper} = await import(
             '../../../wailsjs/go/main/App'
         );
         await SetDisplayWallpaper(display.keys, path);
-        showToast(`Wallpaper set for ${display.name}`);
+        if (!silent) showToast(`Wallpaper set for ${monitorLabel(display)}`);
         await loadDisplays(true);
     } catch (err) {
         console.error('SetDisplayWallpaper failed', err);
@@ -76,7 +127,7 @@ export async function clearDisplayWallpaper(
             '../../../wailsjs/go/main/App'
         );
         await ClearDisplayWallpaper(display.keys);
-        showToast(`${display.name} now uses the global background`);
+        showToast(`${monitorLabel(display)} now uses the global background`);
         await loadDisplays(true);
     } catch (err) {
         console.error('ClearDisplayWallpaper failed', err);

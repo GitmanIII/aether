@@ -1,11 +1,13 @@
 <script lang="ts">
     import WallpaperHero from './WallpaperHero.svelte';
     import WallpaperPicker from './WallpaperPicker.svelte';
+    import MonitorPreview from './MonitorPreview.svelte';
     import ColorPaletteGrid from './ColorPaletteGrid.svelte';
     import HeroEmptyState from './HeroEmptyState.svelte';
     import SemanticColors from './SemanticColors.svelte';
     import AppColorOverrides from './AppColorOverrides.svelte';
     import AdditionalImages from './AdditionalImages.svelte';
+    import DisplaySources from './DisplaySources.svelte';
     import SettingsSidebar from '../sidebar/SettingsSidebar.svelte';
     import ColorPickerDialog from '../color-picker/ColorPickerDialog.svelte';
     import WallpaperEditor from '../wallpaper-editor/WallpaperEditor.svelte';
@@ -38,16 +40,25 @@
     {/if}
 
     <div class="min-w-0 flex-1 overflow-y-auto">
-        {#if hasContent}
-            <div class="flex max-w-[1280px] flex-col gap-7 px-6 pb-8 pt-5">
-                {#if wallpaper}
-                    <WallpaperHero
-                        expanded={colorPickerOpen}
-                        onedit={() => setImageEditorOpen(true)}
-                    />
+        <div class="flex max-w-[1280px] flex-col gap-7 px-6 pb-8 pt-5">
+            <div class="relative">
+                {#if hasContent}
+                    {#if wallpaper}
+                        <WallpaperHero
+                            expanded={colorPickerOpen}
+                            onedit={() => setImageEditorOpen(true)}
+                        />
+                    {:else}
+                        <WallpaperPicker />
+                    {/if}
                 {:else}
-                    <WallpaperPicker />
+                    <HeroEmptyState />
                 {/if}
+                <MonitorPreview />
+            </div>
+
+            {#if hasContent}
+                <DisplaySources />
 
                 <ColorPaletteGrid />
                 <SemanticColors />
@@ -57,10 +68,8 @@
                     <AppColorOverrides />
                     <AdditionalImages />
                 </div>
-            </div>
-        {:else}
-            <HeroEmptyState />
-        {/if}
+            {/if}
+        </div>
     </div>
 
     {#if colorPickerOpen}
