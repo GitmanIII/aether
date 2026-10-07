@@ -275,19 +275,19 @@
             >
                 <button
                     type="button"
-                    class="h-6 px-[7px] text-[11.5px] transition-colors
+                    class="h-6 px-2 text-[11.5px] transition-colors
                         {getResolutionMode() === 'exact'
                         ? 'bg-accent-muted text-accent'
                         : 'text-fg-dimmed hover:text-fg-secondary'}"
                     onclick={() => setResolutionMode('exact')}
                     aria-pressed={getResolutionMode() === 'exact'}
-                    title="Exact resolution"
+                    title="Match this resolution exactly"
                 >
                     =
                 </button>
                 <button
                     type="button"
-                    class="border-border h-6 border-l px-[7px] text-[11.5px] transition-colors
+                    class="border-border h-6 border-l px-2 text-[11.5px] transition-colors
                         {getResolutionMode() === 'atleast'
                         ? 'bg-accent-muted text-accent'
                         : 'text-fg-dimmed hover:text-fg-secondary'}"
@@ -295,7 +295,7 @@
                     aria-pressed={getResolutionMode() === 'atleast'}
                     title="This resolution or higher"
                 >
-                    ≥
+                    ≤
                 </button>
             </div>
         {/if}
