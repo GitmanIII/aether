@@ -4,8 +4,8 @@ set -euo pipefail
 
 source_dir="${AETHER_PLUGIN_SOURCE_DIR:-/usr/share/aether/omarchy-plugins}"
 plugins_dir="${HOME}/.config/omarchy/plugins"
-plugin_ids=(aether.wallpapers aether.blueprints)
-plugin_sources=(wallpapers blueprints)
+plugin_ids=(aether.wallpapers aether.blueprints aether.background)
+plugin_sources=(wallpapers blueprints background)
 staging_path=""
 backup_path=""
 rollback_target=""
@@ -81,7 +81,8 @@ if omarchy-shell shell ping >/dev/null 2>&1; then
     omarchy-shell shell rescanPlugins >/dev/null
     for attempt in 1 2 3 4 5; do
         if omarchy plugin enable aether.wallpapers >/dev/null 2>&1 \
-            && omarchy plugin enable aether.blueprints >/dev/null 2>&1; then
+            && omarchy plugin enable aether.blueprints >/dev/null 2>&1 \
+            && omarchy plugin enable aether.background >/dev/null 2>&1; then
             echo "Installed and enabled Aether shell plugins."
             exit 0
         fi
@@ -96,3 +97,4 @@ fi
 echo "  omarchy-shell shell rescanPlugins"
 echo "  omarchy plugin enable aether.wallpapers"
 echo "  omarchy plugin enable aether.blueprints"
+echo "  omarchy plugin enable aether.background"
