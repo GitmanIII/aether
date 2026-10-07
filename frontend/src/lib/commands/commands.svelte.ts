@@ -2,6 +2,7 @@ import {
     setActiveTab,
     setKeymapOpen,
     setImageEditorOpen,
+    setBlueprintSaveOpen,
 } from '$lib/stores/ui.svelte';
 import {
     getWallpaperPath,
@@ -22,7 +23,6 @@ import {
     redoAction,
     changeWallpaper,
     extractColors,
-    saveThemeAsNew,
 } from '$lib/actions/themeActions';
 import {getOmarchyAvailable} from '$lib/stores/omarchy.svelte';
 
@@ -111,11 +111,11 @@ export function buildCommands(): Command[] {
         },
         {
             id: 'theme.saveAs',
-            label: 'Save and apply as new theme...',
+            label: 'Save as new blueprint…',
             category: 'Theme',
             shortcut: 'Ctrl+J',
-            keywords: 'name folder publish install',
-            run: saveThemeAsNew,
+            keywords: 'name save blueprint',
+            run: () => setBlueprintSaveOpen(true),
             disabled: () =>
                 getIsApplying() ? 'A theme is being applied' : undefined,
         },

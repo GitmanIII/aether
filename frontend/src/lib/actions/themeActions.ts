@@ -19,6 +19,7 @@ import {
     getAdditionalImages,
     getAppOverrides,
     getThemeSnapshot,
+    getBlueprintDisplays,
     getThemeSignature,
     getHistorySnapshot,
     restoreHistorySnapshot,
@@ -66,6 +67,7 @@ export function captureApplyRequest() {
     return {
         ...getThemeSnapshot(),
         settings: {...settings, includedApps: {...settings.includedApps}},
+        displays: getBlueprintDisplays(),
     };
 }
 
@@ -121,6 +123,10 @@ async function runApply(
         document.documentElement.classList.toggle(
             'light-mode',
             request.lightMode
+        );
+        // Re-read per-display assignments restored by the apply.
+        void import('$lib/stores/displays.svelte').then(store =>
+            store.loadDisplays(true)
         );
     }
     return {success: !!result.success, count};

@@ -273,6 +273,15 @@ function stableStringify(value: unknown): string {
 export function getAdditionalImages(): string[] {
     return additionalImages;
 }
+// Per-display wallpapers carried by a loaded blueprint, applied on the next
+// theme apply so loading stays a review action.
+let blueprintDisplays = $state<Record<string, string>>({});
+export function getBlueprintDisplays(): Record<string, string> {
+    return blueprintDisplays;
+}
+export function setBlueprintDisplays(displays: Record<string, string>): void {
+    blueprintDisplays = displays ?? {};
+}
 export function getExtendedColors(): Record<string, string> {
     return extendedColors;
 }

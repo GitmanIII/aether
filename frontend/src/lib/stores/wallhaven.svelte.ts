@@ -15,6 +15,7 @@ let page = $state(1);
 let atleast = $state('1920x1080');
 let ratio = $state('');
 let exactResolution = $state('');
+let resolutionMode = $state<'exact' | 'atleast'>('exact');
 let assignTarget = $state('');
 let colorFilter = $state('');
 let apiKey = $state('');
@@ -98,6 +99,13 @@ export function getRatio(): string {
 }
 export function getExactResolution(): string {
     return exactResolution;
+}
+export function getResolutionMode(): 'exact' | 'atleast' {
+    return resolutionMode;
+}
+export function setResolutionMode(mode: 'exact' | 'atleast'): void {
+    resolutionMode = mode;
+    persist();
 }
 export function getAssignTarget(): string {
     return assignTarget;
@@ -191,6 +199,9 @@ export function togglePurity(index: number): void {
 // --- Actions ---
 /** Builds the wallhaven request params from the current filter state. */
 export function buildSearchParams(page = 1): wallhaven.SearchParams {
+    // Wallhaven ignores `resolutions` when `atleast` is also sent, so only one
+    // is ever set: exact match, or "this resolution or higher".
+    const exact = resolutionMode === 'exact';
     return {
         q: query,
         categories,
@@ -198,9 +209,9 @@ export function buildSearchParams(page = 1): wallhaven.SearchParams {
         sorting,
         order,
         page,
-        atleast,
+        atleast: exact ? '' : exactResolution,
         ratios: ratio,
-        resolutions: exactResolution,
+        resolutions: exact ? exactResolution : '',
         colors: colorFilter,
     };
 }

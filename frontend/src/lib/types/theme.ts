@@ -71,6 +71,8 @@ export interface BlueprintPaletteData {
     nativeColors?: Record<string, string>;
     additionalImages?: string[];
     wallpaperSource?: string;
+    // Per-display wallpapers, keyed by display key.
+    displays?: Record<string, string>;
 }
 
 export interface Blueprint {

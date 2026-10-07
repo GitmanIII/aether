@@ -308,6 +308,7 @@ export namespace main {
 	    settings: theme.Settings;
 	    appOverrides: Record<string, any>;
 	    iconTheme: icontheme.Selection;
+	    displays?: Record<string, string>;
 	
 	    static createFrom(source: any = {}) {
 	        return new ApplyThemeRequest(source);
@@ -325,6 +326,7 @@ export namespace main {
 	        this.settings = this.convertValues(source["settings"], theme.Settings);
 	        this.appOverrides = source["appOverrides"];
 	        this.iconTheme = this.convertValues(source["iconTheme"], icontheme.Selection);
+	        this.displays = source["displays"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

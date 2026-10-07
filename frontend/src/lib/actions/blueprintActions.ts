@@ -10,6 +10,7 @@ import {
     setWallpaperBlur,
     setAppOverrides,
     setAdditionalImages,
+    setBlueprintDisplays,
     setLastExtractedPath,
     setLockedColor,
     dedupeAdditionalImages,
@@ -47,6 +48,8 @@ export function loadBlueprintIntoEditor(bp: Blueprint): void {
         bp.palette.wallpaper ?? ''
     );
     setAdditionalImages(uniqueImages);
+    // Keep the saved per-display wallpapers to apply with the theme, not on load.
+    setBlueprintDisplays(bp.palette.displays ?? {});
     setLastExtractedPath(bp.palette.wallpaper ?? '');
     for (let i = 0; i < 16; i++) {
         setLockedColor(i, bp.palette.lockedColors?.includes(i) ?? false);

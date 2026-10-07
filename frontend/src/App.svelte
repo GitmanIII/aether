@@ -42,6 +42,7 @@
         getTargetsVisible,
         getApplySaveDialogOpen,
         setApplySaveDialogOpen,
+        setBlueprintSaveOpen,
         type Tab,
     } from '$lib/stores/ui.svelte';
 
@@ -84,7 +85,6 @@
         applyTheme,
         applyThemeLive,
         requestThemeApply,
-        saveThemeAsNew,
         undoAction,
         redoAction,
     } from '$lib/actions/themeActions';
@@ -346,7 +346,7 @@
         registerShortcut('ctrl+z', undoAction);
         registerShortcut('ctrl+shift+z', redoAction);
         registerShortcut('ctrl+enter', applyTheme);
-        registerShortcut('ctrl+j', saveThemeAsNew);
+        registerShortcut('ctrl+j', () => setBlueprintSaveOpen(true));
 
         // Ctrl+S - Save blueprint
         registerShortcut('ctrl+s', () => {

@@ -380,6 +380,8 @@ type ApplyThemeRequest struct {
 	Settings         theme.Settings               `json:"settings"`
 	AppOverrides     map[string]map[string]string `json:"appOverrides"`
 	IconTheme        icontheme.Selection          `json:"iconTheme"`
+	// Displays restores per-display wallpapers (e.g. from a loaded blueprint).
+	Displays map[string]string `json:"displays,omitempty"`
 }
 
 // ApplyTheme processes all templates and applies the theme to the system.
@@ -404,7 +406,12 @@ func (a *App) ApplyTheme(req ApplyThemeRequest) (*theme.ApplyResult, error) {
 		IconTheme:        req.IconTheme,
 	}
 
-	return a.writer.ApplyTheme(state, req.Settings)
+	result, err := a.writer.ApplyTheme(state, req.Settings)
+	if err == nil {
+		// Restore per-display wallpapers from a loaded blueprint, if any.
+		a.applyDisplayAssignments(req.Displays)
+	}
+	return result, err
 }
 
 // SaveAndApplyThemeRequest is the payload for saving the current state as a
@@ -578,6 +585,7 @@ func (a *App) ListBlueprints() ([]map[string]interface{}, error) {
 				"extendedColors":   bp.Palette.ExtendedColors,
 				"nativeColors":     bp.Palette.NativeColors,
 				"additionalImages": bp.Palette.AdditionalImages,
+				"displays":         bp.Palette.Displays,
 			},
 			"adjustments":  bp.Adjustments,
 			"appOverrides": bp.AppOverrides,
@@ -622,7 +630,58 @@ func (a *App) SaveBlueprint(req SaveBlueprintRequest) error {
 	if err := bp.SetIconThemeSelection(req.IconTheme); err != nil {
 		return fmt.Errorf("iconTheme: %w", err)
 	}
+	bp.Palette.Displays = a.currentDisplayAssignments()
 	return a.blueprints.Save(req.Name, bp)
+}
+
+// currentDisplayAssignments snapshots the live per-display wallpapers, keyed by
+// each display's preferred key, so a blueprint can restore them. It returns nil
+// when no per-screen background service is available.
+func (a *App) currentDisplayAssignments() map[string]string {
+	result, err := omarchy.Displays()
+	if err != nil || !result.PerScreen {
+		return nil
+	}
+	assignments := make(map[string]string)
+	for _, display := range result.Displays {
+		if display.Assignment != nil && display.Assignment.Type == "image" && display.Assignment.Path != "" {
+			key := display.Key
+			if key == "" && len(display.Keys) > 0 {
+				key = display.Keys[0]
+			}
+			if key != "" {
+				assignments[key] = display.Assignment.Path
+			}
+		}
+	}
+	if len(assignments) == 0 {
+		return nil
+	}
+	return assignments
+}
+
+// applyDisplayAssignments re-applies saved per-display wallpapers to the
+// matching connected displays. Displays without a saved entry are left alone.
+func (a *App) applyDisplayAssignments(assignments map[string]string) {
+	if len(assignments) == 0 {
+		return
+	}
+	result, err := omarchy.Displays()
+	if err != nil || !result.PerScreen {
+		return
+	}
+	for _, display := range result.Displays {
+		for _, key := range display.Keys {
+			path, ok := assignments[key]
+			if !ok || path == "" {
+				continue
+			}
+			if err := omarchy.SetDisplayWallpaper(display.Keys, path); err != nil {
+				log.Printf("restore display wallpaper for %s: %v", display.Name, err)
+			}
+			break
+		}
+	}
 }
 
 // resolveWallpaper returns a local wallpaper path from a blueprint. If the local
@@ -738,7 +797,12 @@ func (a *App) ApplyBlueprint(name string) (*theme.ApplyResult, error) {
 	}
 	a.state.IconTheme = iconTheme
 
-	return a.writer.ApplyTheme(a.state, theme.DefaultApplySettings())
+	result, err := a.writer.ApplyTheme(a.state, theme.DefaultApplySettings())
+	if err == nil {
+		// Restore any saved per-display wallpapers after the theme is applied.
+		a.applyDisplayAssignments(bp.Palette.Displays)
+	}
+	return result, err
 }
 
 // BlueprintExists checks whether a blueprint with the given name already exists.

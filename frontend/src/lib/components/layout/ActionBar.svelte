@@ -27,13 +27,14 @@
         toggleTargetsVisible,
         getSidebarVisible,
         toggleSidebar,
+        getBlueprintSaveOpen,
+        setBlueprintSaveOpen,
     } from '$lib/stores/ui.svelte';
     import {getApiKey, getTotalResults} from '$lib/stores/wallhaven.svelte';
     import {
         applyTheme,
         getNativeAppOverrides,
         requestThemeApply,
-        saveThemeAsNew,
         undoAction,
         redoAction,
     } from '$lib/actions/themeActions';
@@ -54,7 +55,6 @@
     let showApplyMenu = $state(false);
     let showMoreMenu = $state(false);
     let showExportDialog = $state(false);
-    let showSaveDialog = $state(false);
     let confirmKind = $state<'revert' | 'reset' | null>(null);
 
     const CONFIRM_CONFIG = {
@@ -428,7 +428,7 @@
             class="text-fg-secondary hover:bg-bg-hover hover:text-fg-primary h-[30px] px-2.5 text-[12px] transition-colors"
             onclick={() => {
                 closeMenus();
-                showSaveDialog = true;
+                setBlueprintSaveOpen(true);
             }}>Save</button
         >
         {@render divider()}
@@ -626,9 +626,12 @@
             {#if showApplyMenu}
                 {#snippet applyItems()}
                     {@render menuItem(
-                        'Save as new folder…',
+                        'Save as new blueprint…',
                         'Ctrl J',
-                        saveThemeAsNew
+                        () => {
+                            closeMenus();
+                            setBlueprintSaveOpen(true);
+                        }
                     )}
                     {@render menuItem('Apply only', 'Ctrl ↵', applyTheme)}
                 {/snippet}
@@ -773,9 +776,9 @@
 </Modal>
 
 <SaveDialog
-    open={showSaveDialog}
-    onclose={() => (showSaveDialog = false)}
-    onsave={() => (showSaveDialog = false)}
+    open={getBlueprintSaveOpen()}
+    onclose={() => setBlueprintSaveOpen(false)}
+    onsave={() => setBlueprintSaveOpen(false)}
 />
 
 {#if confirmKind}

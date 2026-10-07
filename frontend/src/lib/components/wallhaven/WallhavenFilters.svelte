@@ -11,12 +11,12 @@
         setSorting,
         getOrder,
         setOrder,
-        getAtleast,
-        setAtleast,
         getRatio,
         setRatio,
         getExactResolution,
         setExactResolution,
+        getResolutionMode,
+        setResolutionMode,
         getAssignTarget,
         setAssignTarget,
         getColorFilter,
@@ -268,23 +268,37 @@
                 </select>
                 {@render chevron('right-2 h-[11px] w-[11px]')}
             </div>
-        {/if}
-
-        <div class="relative">
-            <select
-                class="!border-border text-fg-secondary hover:!border-border-focus focus:!border-accent h-6 border !bg-transparent pl-2 pr-7 text-[11.5px] outline-none transition-colors"
-                value={getAtleast()}
-                onchange={e => setAtleast(e.currentTarget.value)}
-                title="Minimum resolution"
-                aria-label="Minimum resolution"
+            <div
+                class="border-border flex items-center border"
+                role="group"
+                aria-label="Resolution match"
             >
-                <option value="">Any resolution</option>
-                <option value="1920x1080">1920×1080+</option>
-                <option value="2560x1440">2560×1440+</option>
-                <option value="3840x2160">3840×2160+</option>
-            </select>
-            {@render chevron('right-2 h-[11px] w-[11px]')}
-        </div>
+                <button
+                    type="button"
+                    class="h-6 px-[7px] text-[11.5px] transition-colors
+                        {getResolutionMode() === 'exact'
+                        ? 'bg-accent-muted text-accent'
+                        : 'text-fg-dimmed hover:text-fg-secondary'}"
+                    onclick={() => setResolutionMode('exact')}
+                    aria-pressed={getResolutionMode() === 'exact'}
+                    title="Exact resolution"
+                >
+                    =
+                </button>
+                <button
+                    type="button"
+                    class="border-border h-6 border-l px-[7px] text-[11.5px] transition-colors
+                        {getResolutionMode() === 'atleast'
+                        ? 'bg-accent-muted text-accent'
+                        : 'text-fg-dimmed hover:text-fg-secondary'}"
+                    onclick={() => setResolutionMode('atleast')}
+                    aria-pressed={getResolutionMode() === 'atleast'}
+                    title="This resolution or higher"
+                >
+                    ≥
+                </button>
+            </div>
+        {/if}
 
         <div class="ml-auto flex items-center gap-3">
             {#if getTotalResults() > 0}

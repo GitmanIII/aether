@@ -69,6 +69,10 @@ type PaletteData struct {
 	NativeColors     map[string]string `json:"nativeColors,omitempty"`
 	AdditionalImages []string          `json:"additionalImages,omitempty"`
 	WallpaperSource  string            `json:"wallpaperSource,omitempty"`
+	// Displays maps a display key (serial-backed or connector name) to its
+	// per-display wallpaper, so a blueprint can restore a multi-monitor setup.
+	// Omitted when empty or when no per-screen background service is present.
+	Displays map[string]string `json:"displays,omitempty"`
 }
 
 // UnmarshalJSON handles both formats for lockedColors:

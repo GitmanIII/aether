@@ -57,6 +57,7 @@ let commandPaletteOpen = $state<boolean>(false);
 let keymapOpen = $state<boolean>(false);
 let imageEditorOpen = $state<boolean>(false);
 let applySaveDialogOpen = $state<boolean>(false);
+let blueprintSaveOpen = $state<boolean>(false);
 
 // --- Getters ---
 export function getActiveTab(): Tab {
@@ -277,6 +278,12 @@ export function getApplySaveDialogOpen(): boolean {
 }
 export function setApplySaveDialogOpen(v: boolean): void {
     applySaveDialogOpen = v;
+}
+export function getBlueprintSaveOpen(): boolean {
+    return blueprintSaveOpen;
+}
+export function setBlueprintSaveOpen(v: boolean): void {
+    blueprintSaveOpen = v;
 }
 
 export function getColorDrag(): {color: string; x: number; y: number} | null {
