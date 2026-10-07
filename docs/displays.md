@@ -86,7 +86,7 @@ The **Palette source** panel chooses where the colors come from:
 
 Aether **blueprints** store the per-display wallpapers alongside the palette, so
 saving a blueprint captures "Monitor 1 = A, Monitor 2 = B" and applying it
-restores both. Use **Apply theme ▾ → Save as new blueprint…** (Ctrl+J) or the
+restores both. Use **Apply ▾ → Save as new blueprint…** (Ctrl+J) or the
 Blueprints tab. Omarchy theme folders are left untouched, and a blueprint used on
 a machine with no per-display service simply falls back to its single wallpaper.
 

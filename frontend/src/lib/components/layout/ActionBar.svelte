@@ -54,7 +54,6 @@
     let showApplyMenu = $state(false);
     let showMoreMenu = $state(false);
     let showExportDialog = $state(false);
-    let applyAfterBlueprintSave = $state(false);
     let confirmKind = $state<'revert' | 'reset' | null>(null);
 
     const CONFIRM_CONFIG = {
@@ -175,10 +174,8 @@
 
     // --- Editor actions ---
 
-    // The primary action works with Aether blueprints, not Omarchy theme
-    // folders: name a blueprint, then (optionally) apply the theme.
-    function openBlueprintSave(apply: boolean) {
-        applyAfterBlueprintSave = apply;
+    // Saving uses Aether blueprints, not Omarchy theme folders.
+    function openBlueprintSave() {
         setBlueprintSaveOpen(true);
     }
 
@@ -595,11 +592,11 @@
             <button
                 type="button"
                 class="bg-accent text-accent-fg hover:bg-accent-hover flex h-8 items-center gap-2.5 px-3.5 text-[12px] font-semibold transition-colors disabled:opacity-50"
-                onclick={() => openBlueprintSave(true)}
+                onclick={applyTheme}
                 disabled={applying}
-                title="Save as a blueprint and apply the theme (Ctrl+Enter applies only)"
+                title="Apply the theme (Ctrl+Enter)"
             >
-                <span>{applying ? 'Applying…' : 'Apply blueprint'}</span>
+                <span>{applying ? 'Applying…' : 'Apply'}</span>
                 {#if !applying}
                     <KbdInverse>Ctrl ↵</KbdInverse>
                 {/if}
@@ -633,10 +630,9 @@
                         'Ctrl J',
                         () => {
                             closeMenus();
-                            openBlueprintSave(false);
+                            openBlueprintSave();
                         }
                     )}
-                    {@render menuItem('Apply only', 'Ctrl ↵', applyTheme)}
                 {/snippet}
                 {@render menuPanel('right', 'min-w-[220px]', applyItems)}
             {/if}
@@ -780,15 +776,8 @@
 
 <SaveDialog
     open={getBlueprintSaveOpen()}
-    onclose={() => {
-        setBlueprintSaveOpen(false);
-        applyAfterBlueprintSave = false;
-    }}
-    onsave={() => {
-        setBlueprintSaveOpen(false);
-        if (applyAfterBlueprintSave) applyTheme();
-        applyAfterBlueprintSave = false;
-    }}
+    onclose={() => setBlueprintSaveOpen(false)}
+    onsave={() => setBlueprintSaveOpen(false)}
 />
 
 {#if confirmKind}
