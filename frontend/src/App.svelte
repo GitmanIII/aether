@@ -84,7 +84,6 @@
     import {
         applyTheme,
         applyThemeLive,
-        requestThemeApply,
         undoAction,
         redoAction,
     } from '$lib/actions/themeActions';

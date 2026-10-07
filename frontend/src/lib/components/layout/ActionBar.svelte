@@ -34,7 +34,6 @@
     import {
         applyTheme,
         getNativeAppOverrides,
-        requestThemeApply,
         undoAction,
         redoAction,
     } from '$lib/actions/themeActions';
@@ -55,6 +54,7 @@
     let showApplyMenu = $state(false);
     let showMoreMenu = $state(false);
     let showExportDialog = $state(false);
+    let applyAfterBlueprintSave = $state(false);
     let confirmKind = $state<'revert' | 'reset' | null>(null);
 
     const CONFIRM_CONFIG = {
@@ -175,7 +175,12 @@
 
     // --- Editor actions ---
 
-    const handleApply = requestThemeApply;
+    // The primary action works with Aether blueprints, not Omarchy theme
+    // folders: name a blueprint, then (optionally) apply the theme.
+    function openBlueprintSave(apply: boolean) {
+        applyAfterBlueprintSave = apply;
+        setBlueprintSaveOpen(true);
+    }
 
     async function handleClear() {
         try {
@@ -590,13 +595,11 @@
             <button
                 type="button"
                 class="bg-accent text-accent-fg hover:bg-accent-hover flex h-8 items-center gap-2.5 px-3.5 text-[12px] font-semibold transition-colors disabled:opacity-50"
-                onclick={handleApply}
+                onclick={() => openBlueprintSave(true)}
                 disabled={applying}
-                title={dirty
-                    ? 'Apply updates to the saved theme folder (Ctrl+Enter applies only)'
-                    : 'Apply theme (Ctrl+Enter applies only)'}
+                title="Save as a blueprint and apply the theme (Ctrl+Enter applies only)"
             >
-                <span>{applying ? 'Applying…' : 'Apply theme'}</span>
+                <span>{applying ? 'Applying…' : 'Apply blueprint'}</span>
                 {#if !applying}
                     <KbdInverse>Ctrl ↵</KbdInverse>
                 {/if}
@@ -630,7 +633,7 @@
                         'Ctrl J',
                         () => {
                             closeMenus();
-                            setBlueprintSaveOpen(true);
+                            openBlueprintSave(false);
                         }
                     )}
                     {@render menuItem('Apply only', 'Ctrl ↵', applyTheme)}
@@ -777,8 +780,15 @@
 
 <SaveDialog
     open={getBlueprintSaveOpen()}
-    onclose={() => setBlueprintSaveOpen(false)}
-    onsave={() => setBlueprintSaveOpen(false)}
+    onclose={() => {
+        setBlueprintSaveOpen(false);
+        applyAfterBlueprintSave = false;
+    }}
+    onsave={() => {
+        setBlueprintSaveOpen(false);
+        if (applyAfterBlueprintSave) applyTheme();
+        applyAfterBlueprintSave = false;
+    }}
 />
 
 {#if confirmKind}
