@@ -17,6 +17,7 @@
         nextUnassignedDisplay,
         markSessionSet,
         setActiveDisplayKey,
+        getPerScreen,
     } from '$lib/stores/displays.svelte';
     import {nearestWallhavenRatio, resolutionQuery} from '$lib/utils/aspect';
     import {openURL} from '$lib/utils/browser';
@@ -40,7 +41,9 @@
         applying?: boolean;
     } = $props();
     // Explicit target wins; otherwise fall back to the editor's elected monitor.
-    let assignTarget = $derived(target ?? elected);
+    // Without a per-screen service, per-display is unavailable, so use the
+    // original global flow.
+    let assignTarget = $derived(getPerScreen() ? (target ?? elected) : null);
     let isDownloading = $state(false);
     let favoriteKey = $derived(wallpaper.path || wallpaper.id);
     let isFavorited = $derived(isFavorite(favoriteKey));

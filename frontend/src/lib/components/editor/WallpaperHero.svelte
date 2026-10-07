@@ -35,6 +35,7 @@
         assignDisplayWallpaper,
         markSessionSet,
         monitorLabel,
+        getPerScreen,
     } from '$lib/stores/displays.svelte';
 
     let {onedit, expanded = false}: {onedit?: () => void; expanded?: boolean} =
@@ -260,8 +261,9 @@
             const path = await OpenFileDialog();
             if (!path) return;
             setWallpaperPath(path);
-            // Keep the elected monitor's assignment in sync with the hero.
-            const key = getActiveDisplayKey();
+            // Keep the elected monitor's assignment in sync with the hero, but
+            // only when a per-screen service is available.
+            const key = getPerScreen() ? getActiveDisplayKey() : '';
             const display = key
                 ? (getDisplays().find(d => d.key === key) ?? null)
                 : null;

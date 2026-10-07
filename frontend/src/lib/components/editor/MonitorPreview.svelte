@@ -7,6 +7,7 @@
         setActiveDisplayKey,
         clearDisplayWallpaper,
         monitorLabel,
+        getPerScreen,
     } from '$lib/stores/displays.svelte';
     import {getWallpaperPath, setWallpaperPath} from '$lib/stores/theme.svelte';
     import {setAssignTarget} from '$lib/stores/wallhaven.svelte';
@@ -84,7 +85,7 @@
     }
 </script>
 
-{#if displays.length && wallpaper}
+{#if displays.length && wallpaper && getPerScreen()}
     <div
         class="pointer-events-none absolute inset-0 flex items-center justify-center p-5"
     >

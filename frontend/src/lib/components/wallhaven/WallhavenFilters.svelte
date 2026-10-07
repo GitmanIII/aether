@@ -31,6 +31,7 @@
         loadDisplays,
         monitorLabel,
         getSessionSet,
+        getPerScreen,
     } from '$lib/stores/displays.svelte';
     import {
         WALLHAVEN_RATIOS,
@@ -203,7 +204,7 @@
 
         <span class="bg-border h-4 w-px"></span>
 
-        {#if displays.length}
+        {#if displays.length && getPerScreen()}
             <div class="relative">
                 <select
                     class="!border-border text-fg-secondary hover:!border-border-focus focus:!border-accent h-6 border !bg-transparent pl-2 pr-7 text-[11.5px] outline-none transition-colors"
