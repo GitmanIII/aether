@@ -42,10 +42,13 @@ A visual theming application for [Omarchy](https://omarchy.org). Extract colors 
 - Add your own apps with custom templates
 
 ### Multiple Displays
-- Read the monitor layout from Omarchy/Hyprland, including position, scale, and rotation
+- Read the monitor layout from Omarchy/Hyprland (position, scale, rotation, native resolution)
 - Assign a separate wallpaper to each display, so a portrait monitor gets a native image instead of a crop
-- Detect portrait outputs automatically and preview the physical layout to scale
-- Generate a theme from any display's wallpaper
+- Ships a per-display background service, so it works with no external dependency
+- Overlay the monitor layout on the wallpaper in the editor and elect which display drives the tools
+- Draw the palette from one display, or blend several equally
+- Save per-display wallpapers in a blueprint and restore them with the theme
+- Find wallpapers for a display from Wallhaven, filtered by its aspect ratio and resolution
 
 ### Extras
 - WCAG contrast ratio checker with AAA/AA accessibility grading

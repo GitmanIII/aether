@@ -78,11 +78,19 @@ The plugin calls `aether --list-blueprints --json` and `aether --apply-blueprint
 |   |-- manifest.json
 |   |-- shell.qml
 |   `-- WallpaperSlider.qml
-`-- aether.blueprints/
+|-- aether.blueprints/
+|   |-- manifest.json
+|   |-- shell.qml
+|   `-- Blueprints.qml
+`-- aether.background/
     |-- manifest.json
-    |-- shell.qml
-    `-- Blueprints.qml
+    `-- Background.qml
 ```
+
+`aether.background` is a background **service** (not an overlay): it replaces
+Omarchy's `omarchy.background` renderer and adds per-display wallpapers. It is
+installed and enabled alongside the selectors so per-display support works with
+no external dependency. See [Displays](displays.md) for details.
 
 Omarchy watches this directory. To force a refresh:
 
@@ -90,6 +98,7 @@ Omarchy watches this directory. To force a refresh:
 omarchy-shell shell rescanPlugins
 omarchy plugin enable aether.wallpapers
 omarchy plugin enable aether.blueprints
+omarchy plugin enable aether.background
 ```
 
 ## Troubleshooting
@@ -100,6 +109,7 @@ Check discovery and state:
 omarchy plugin list
 omarchy plugin validate ~/.config/omarchy/plugins/aether.wallpapers
 omarchy plugin validate ~/.config/omarchy/plugins/aether.blueprints
+omarchy plugin validate ~/.config/omarchy/plugins/aether.background
 ```
 
 If a selector opens but reports that an Aether command failed, verify that `aether` on `PATH` is the current build with `aether --version`.
