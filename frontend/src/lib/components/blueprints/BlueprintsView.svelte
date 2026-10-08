@@ -43,7 +43,9 @@
                 '../../../../wailsjs/go/main/App'
             );
             await DeleteBlueprint(name);
-            blueprints = blueprints.filter(b => b.name !== name);
+            blueprints = blueprints.filter(
+                b => (b.name ?? '').toLowerCase() !== name.toLowerCase()
+            );
             showToast(`Deleted: ${name}`);
         } catch {
             showToast('Couldn’t delete that theme');

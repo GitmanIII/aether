@@ -48,7 +48,7 @@ test('repeated Enter cannot bypass overwrite confirmation, and Override saves th
     enter();
     enter();
     await settle();
-    expect(BlueprintExists).toHaveBeenCalledExactlyOnceWith('Original');
+    expect(BlueprintExists).toHaveBeenCalledExactlyOnceWith('original');
     expect(target.querySelector('input')!.disabled).toBe(true);
 
     // Even programmatic edits while the name check is pending cannot retarget it.
@@ -59,7 +59,7 @@ test('repeated Enter cannot bypass overwrite confirmation, and Override saves th
     theme.setIconTheme({mode: 'explicit', id: 'Later-Icons'}, true);
     exists.resolve(true);
     await settle();
-    expect(target.textContent).toContain('A theme named "Original"');
+    expect(target.textContent).toContain('A theme named "original"');
     enter();
     expect(SaveBlueprint).not.toHaveBeenCalled();
 
@@ -70,7 +70,7 @@ test('repeated Enter cannot bypass overwrite confirmation, and Override saves th
     expect(SaveBlueprint).toHaveBeenCalledTimes(1);
     expect(SaveBlueprint).toHaveBeenCalledWith(
         expect.objectContaining({
-            name: 'Original',
+            name: 'original',
             palette: originalPalette,
             wallpaperPath: '/original.png',
             wallpaperBlur: true,
@@ -120,9 +120,9 @@ test('a failed lookup can be retried without saving, and canceling confirmation 
     setName(target, 'Fresh');
     enter();
     await settle();
-    expect(BlueprintExists).toHaveBeenLastCalledWith('Fresh');
+    expect(BlueprintExists).toHaveBeenLastCalledWith('fresh');
     expect(SaveBlueprint).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({name: 'Fresh'})
+        expect.objectContaining({name: 'fresh'})
     );
 });
 

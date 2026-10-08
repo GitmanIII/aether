@@ -48,26 +48,26 @@ func TestLoadAllJSON(t *testing.T) {
 	}
 }
 
-func TestDeleteRequiresUnambiguousFullName(t *testing.T) {
+func TestDeleteIsCaseInsensitive(t *testing.T) {
 	for _, tt := range []struct {
-		name       string
-		query      string
-		names      []string
-		wantDelete string
-		wantError  string
+		name        string
+		query       string
+		names       []string
+		wantDeleted []string
+		wantError   string
 	}{
-		{"empty", "", []string{"Night Sky"}, "", "must not be empty"},
-		{"whitespace", " \t\n", []string{"Night Sky"}, "", "must not be empty"},
-		{"unique substring", "Night", []string{"Night Sky"}, "", "not found"},
-		{"ambiguous substring", "Night", []string{"Night Sky", "Night Sea"}, "", "not found"},
-		{"filename is not display name", "first", []string{"Night Sky"}, "", "not found"},
-		{"unknown", "Missing", []string{"Night Sky"}, "", "not found"},
-		{"path traversal", "../first", []string{"Night Sky"}, "", "not found"},
-		{"full name", "Night Sky", []string{"Night Sky", "Night Sky Bright"}, "first.json", ""},
-		{"case insensitive", "NIGHT SKY", []string{"Night Sky", "Sunrise"}, "first.json", ""},
-		{"duplicate display names", "Night Sky", []string{"Night Sky", "Night Sky"}, "", "ambiguous"},
-		{"case ambiguous", "Night Sky", []string{"Night Sky", "night sky"}, "", "ambiguous"},
-		{"legacy filename fallback", "FIRST", []string{"", "Sunrise"}, "first.json", ""},
+		{"empty", "", []string{"Night Sky"}, nil, "must not be empty"},
+		{"whitespace", " \t\n", []string{"Night Sky"}, nil, "must not be empty"},
+		{"unique substring", "Night", []string{"Night Sky"}, nil, "not found"},
+		{"ambiguous substring", "Night", []string{"Night Sky", "Night Sea"}, nil, "not found"},
+		{"filename is not display name", "first", []string{"Night Sky"}, nil, "not found"},
+		{"unknown", "Missing", []string{"Night Sky"}, nil, "not found"},
+		{"path traversal", "../first", []string{"Night Sky"}, nil, "not found"},
+		{"full name", "Night Sky", []string{"Night Sky", "Night Sky Bright"}, []string{"first.json"}, ""},
+		{"case insensitive", "NIGHT SKY", []string{"Night Sky", "Sunrise"}, []string{"first.json"}, ""},
+		{"duplicate display names", "Night Sky", []string{"Night Sky", "Night Sky"}, []string{"first.json", "second.json"}, ""},
+		{"case variants", "NIGHT SKY", []string{"Night Sky", "night sky"}, []string{"first.json", "second.json"}, ""},
+		{"legacy filename fallback", "FIRST", []string{"", "Sunrise"}, []string{"first.json"}, ""},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := newTestService(t)
@@ -95,9 +95,13 @@ func TestDeleteRequiresUnambiguousFullName(t *testing.T) {
 			} else if err != nil {
 				t.Fatal(err)
 			}
+			deleted := make(map[string]bool, len(tt.wantDeleted))
+			for _, filename := range tt.wantDeleted {
+				deleted[filename] = true
+			}
 			for filename, original := range originals {
 				data, err := os.ReadFile(filepath.Join(svc.dir, filename))
-				if filename == tt.wantDelete {
+				if deleted[filename] {
 					if !os.IsNotExist(err) {
 						t.Errorf("%s was not deleted: %v", filename, err)
 					}
@@ -109,13 +113,62 @@ func TestDeleteRequiresUnambiguousFullName(t *testing.T) {
 	}
 }
 
+// TestSaveNormalizesNameToLowerCase covers the reported bug: saving "Cyber3"
+// then "cyber3" must not create two blueprints.
+func TestSaveNormalizesNameToLowerCase(t *testing.T) {
+	svc := newTestService(t)
+	for _, name := range []string{"Cyber3", "cyber3", "CYBER3"} {
+		if err := svc.Save(name, testBlueprint()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	bps, err := svc.LoadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(bps) != 1 {
+		t.Fatalf("loaded %d blueprints, want 1", len(bps))
+	}
+	if bps[0].Name != "cyber3" {
+		t.Errorf("name = %q, want %q", bps[0].Name, "cyber3")
+	}
+	entries, err := os.ReadDir(svc.dir)
+	if err != nil || len(entries) != 1 || entries[0].Name() != "cyber3.json" {
+		t.Fatalf("unexpected blueprint files: %v, %v", entries, err)
+	}
+}
+
+// TestDeleteRemovesLegacyCaseVariants covers blueprints created before names
+// were normalized: "Cyber3.json" and "cyber3.json" must both be deletable.
+func TestDeleteRemovesLegacyCaseVariants(t *testing.T) {
+	svc := newTestService(t)
+	for _, name := range []string{"Cyber3", "cyber3"} {
+		bp := testBlueprint()
+		bp.Name = name
+		data, err := json.Marshal(bp)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(svc.dir, name+".json"), data, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.Delete("CyBeR3"); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := os.ReadDir(svc.dir)
+	if err != nil || len(entries) != 0 {
+		t.Fatalf("legacy case variants not removed: %v, %v", entries, err)
+	}
+}
+
 func TestFindByNameRetainsFuzzyLookup(t *testing.T) {
 	svc := newTestService(t)
 	if err := svc.Save("Night Sky", testBlueprint()); err != nil {
 		t.Fatal(err)
 	}
 	bp, err := svc.FindByName("night")
-	if err != nil || bp == nil || bp.Name != "Night Sky" {
+	if err != nil || bp == nil || bp.Name != "night sky" {
 		t.Fatalf("fuzzy lookup = %+v, %v", bp, err)
 	}
 }
@@ -125,7 +178,7 @@ func TestSaveFailurePreservesBlueprint(t *testing.T) {
 	if err := svc.Save("Night Sky", testBlueprint()); err != nil {
 		t.Fatal(err)
 	}
-	path := filepath.Join(svc.dir, "Night-Sky.json")
+	path := filepath.Join(svc.dir, "night-sky.json")
 	if err := os.Chmod(path, 0600); err != nil {
 		t.Fatal(err)
 	}

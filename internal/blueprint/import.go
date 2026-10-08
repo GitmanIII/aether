@@ -297,9 +297,8 @@ func SaveImported(bp *Blueprint) (string, error) {
 	dir := platform.BlueprintDir()
 	_ = platform.EnsureDir(dir)
 
-	safeName := strings.ReplaceAll(bp.Name, "/", "-")
-	safeName = strings.ReplaceAll(safeName, " ", "-")
-	filename := fmt.Sprintf("%s_imported_%d.json", safeName, time.Now().Unix())
+	bp.Name = normalizeName(bp.Name)
+	filename := fmt.Sprintf("%s_imported_%d.json", safeFilename(bp.Name), time.Now().Unix())
 	path := filepath.Join(dir, filename)
 
 	if err := platform.WriteJSON(path, bp); err != nil {

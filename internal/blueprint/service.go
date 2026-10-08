@@ -78,47 +78,62 @@ func (s *Service) FindByName(name string) (*Blueprint, error) {
 	return nil, nil
 }
 
-// Save persists a blueprint to disk.
+// normalizeName returns the canonical blueprint identity: trimmed and
+// lowercased. Blueprint names are case-insensitive, so "Cyber3" and "cyber3"
+// are the same blueprint. This matches Omarchy, which lowercases theme names
+// on install.
+func normalizeName(name string) string {
+	return strings.ToLower(strings.TrimSpace(name))
+}
+
+// safeFilename turns a normalized blueprint name into a filename stem. Path
+// separators and spaces become hyphens; the result is already lowercase.
+func safeFilename(name string) string {
+	safe := strings.ReplaceAll(name, "/", "-")
+	return strings.ReplaceAll(safe, " ", "-")
+}
+
+// Save persists a blueprint to disk. The name is normalized before it is
+// written, so saving "Cyber3" and "cyber3" updates one blueprint instead of
+// creating two case variants.
 func (s *Service) Save(name string, bp Blueprint) error {
+	name = normalizeName(name)
 	bp.Name = name
 	bp.Timestamp = time.Now().UnixMilli()
 	if err := validateBlueprint(&bp); err != nil {
 		return fmt.Errorf("validate blueprint: %w", err)
 	}
 
-	// Sanitize filename
-	safeName := strings.ReplaceAll(name, "/", "-")
-	safeName = strings.ReplaceAll(safeName, " ", "-")
-	filename := safeName + ".json"
-	path := filepath.Join(s.dir, filename)
-
+	path := filepath.Join(s.dir, safeFilename(name)+".json")
 	return platform.WriteJSON(path, bp)
 }
 
-// Delete removes a blueprint by its full, case-insensitive display name.
-// Empty or duplicate names are rejected; fuzzy lookup is never used for deletion.
+// Delete removes a blueprint by its case-insensitive name. Because identity is
+// case-insensitive, it also removes legacy case variants (for example
+// Cyber3.json and cyber3.json) that predate name normalization. Exact-name
+// matching is used; fuzzy lookup is never used for deletion.
 func (s *Service) Delete(name string) error {
-	if strings.TrimSpace(name) == "" {
+	target := normalizeName(name)
+	if target == "" {
 		return fmt.Errorf("blueprint name must not be empty")
 	}
 	blueprints, err := s.LoadAll()
 	if err != nil {
 		return err
 	}
-	var match *Blueprint
+	var matches []Blueprint
 	for i := range blueprints {
-		if strings.EqualFold(blueprints[i].Name, name) {
-			if match != nil {
-				return fmt.Errorf("blueprint name %q is ambiguous", name)
-			}
-			match = &blueprints[i]
+		if normalizeName(blueprints[i].Name) == target {
+			matches = append(matches, blueprints[i])
 		}
 	}
-	if match == nil {
+	if len(matches) == 0 {
 		return fmt.Errorf("blueprint %q not found", name)
 	}
-	if err := os.Remove(match.Path); err != nil {
-		return fmt.Errorf("delete blueprint %q: %w", name, err)
+	for _, match := range matches {
+		if err := os.Remove(match.Path); err != nil {
+			return fmt.Errorf("delete blueprint %q: %w", name, err)
+		}
 	}
 	return nil
 }

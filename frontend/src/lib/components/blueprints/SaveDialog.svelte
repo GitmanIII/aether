@@ -75,7 +75,8 @@
         const id = ++requestId;
         // The existence check and any explicit override must use this exact payload.
         const request: main.SaveBlueprintRequest = {
-            name: name.trim(),
+            // Blueprint names are case-insensitive; store one canonical casing.
+            name: name.trim().toLowerCase(),
             palette: [...getPalette()],
             wallpaperPath: getWallpaperPath(),
             wallpaperBlur: getWallpaperBlur(),
